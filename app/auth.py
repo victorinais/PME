@@ -26,15 +26,15 @@ def activate():
             
             db = get_db()
             attempt = db.execute(
-                QUERY, (number, utils.U_UNCONFIRMED)
+                'SELECT * FROM activationlink where challenge=?  and state=?  and CURRENT_TIMESTAMP BETWEEN create AND validuntil', (number, utils.U_UNCONFIRMED)
             ).fetchone()
 
             if attempt is not None:
                 db.execute(
-                    QUERY, (utils.U_CONFIRMED, attempt['id'])
+                    'UPDATE activationlink SET state= ?  WHERE id= ?', (utils.U_CONFIRMED, attempt['id'])
                 )
                 db.execute(
-                    QUERY, (attempt['username'], attempt['password'], attempt['salt'], attempt['email'])
+                    'INSERT INTO user (username, password, salt, email) VALUES (?, ?, ?, ?)', (attempt['username'], attempt['password'], attempt['salt'], attempt['email'])
                 )
                 db.commit()
 
@@ -73,7 +73,7 @@ def register():
                 flash(error)
                 return render_template('auth/register.html')
 
-            if db.execute(QUERY, (username,)).fetchone() is not None:
+            if db.execute('SELECT id FROM user WHERE username = ?', (username,)).fetchone() is not None:
                 error = 'User {} is already registered.'.format(username)
                 flash(error)
                 return render_template('auth/register.html')
@@ -153,17 +153,17 @@ def confirm():
 
             db = get_db()
             attempt = db.execute(
-                QUERY, (authid, utils.F_ACTIVE)
+                'SELECT * FROM activationlink where challenge=?  and state=?  and CURRENT_TIMESTAMP BETWEEN create AND validuntil', (authid, utils.F_ACTIVE)
             ).fetchone()
             
             if attempt is not None:
                 db.execute(
-                    QUERY, (utils.F_INACTIVE, attempt['id'])
+                    'UPDATE activationlink SET state= ?  WHERE id= ?', (utils.F_INACTIVE, attempt['id'])
                 )
                 salt = hex(random.getrandbits(128))[2:]
                 hashP = generate_password_hash(password + salt)   
                 db.execute(
-                    QUERY, (hashP, salt, attempt['userid'])
+                    'INSERT INTO user (username, password, salt, email) VALUES (?, ?, ?, ?)', (hashP, salt, attempt['userid'])
                 )
                 db.commit()
                 return redirect(url_for('auth.login'))
@@ -187,7 +187,7 @@ def change():
             
             db = get_db()
             attempt = db.execute(
-                QUERY, (number, utils.F_ACTIVE)
+                'SELECT * FROM activationlink where challenge=?  and state=?  and CURRENT_TIMESTAMP BETWEEN create AND validuntil', (number, utils.F_ACTIVE)
             ).fetchone()
             
             if attempt is not None:
@@ -214,18 +214,18 @@ def forgot():
 
             db = get_db()
             user = db.execute(
-                QUERY, (email,)
+                'SELECT * FROM activationlink where challenge=?  and state=?  and CURRENT_TIMESTAMP BETWEEN create AND validuntil', (email,)
             ).fetchone()
 
             if user is not None:
                 number = hex(random.getrandbits(512))[2:]
                 
                 db.execute(
-                    QUERY,
+                    'UPDATE activationlink SET state= ?  WHERE id= ?',
                     (utils.F_INACTIVE, user['id'])
                 )
                 db.execute(
-                    QUERY,
+                    'INSERT INTO user (username, password, salt, email) VALUES (?, ?, ?, ?)',
                     (user['id'], number, utils.F_ACTIVE)
                 )
                 db.commit()
