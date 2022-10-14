@@ -78,7 +78,7 @@ def register():
                 flash(error)
                 return render_template('auth/register.html')
             
-            if (? or (not utils.isEmailValid(email))):
+            if ((not email) or (not utils.isEmailValid(email))):
                 error =  'Email address invalid.'
                 flash(error)
                 return render_template('auth/register.html')
@@ -207,7 +207,7 @@ def forgot():
         if request.method == 'POST':
             email = request.form('email')
             
-            if (? or (not utils.isEmailValid(email))):
+            if ((not email) or (not utils.isEmailValid(email))):
                 error = 'Email Address Invalid'
                 flash(error)
                 return render_template('auth/forgot.html')
