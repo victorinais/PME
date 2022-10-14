@@ -53,7 +53,7 @@ def send():
         userto = None 
         
         userto = db.execute(
-            QUERY, (to_username,)
+            'SELECT * FROM user WHERE username = ?', (to_username,)
         ).fetchone()
         
         if userto is None:
@@ -64,7 +64,8 @@ def send():
         else:
             db = get_db()
             db.execute(
-                QUERY,
+                'INSERT INTO message (from_id, to_id, subject, body)',
+                ' VALUES (?, ?, ?, ?)',
                 (g.user['id'], userto['id'], subject, body)
             )
             db.commit()
