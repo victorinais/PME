@@ -44,7 +44,7 @@ def activate():
         return redirect(url_for('auth.login'))
 
 
-@bp.route('/register', methods='POST')
+@bp.route('/register', methods=('GET', 'POST'))
 def register():
     try:
         if g.user:
@@ -68,7 +68,7 @@ def register():
                 flash(error)
                 return render_template('auth/register.html')
 
-            if not utils.isPasswordValid(password):
+            if not password:
                 error = 'Password is required.'
                 flash(error)
                 return render_template('auth/register.html')
@@ -78,7 +78,7 @@ def register():
                 flash(error)
                 return render_template('auth/register.html')
             
-            if ((not email) or (not utils.isEmailValid(email))):
+            if((not email) or (not utils.isEmailValid(email))):
                 error =  'Email address invalid.'
                 flash(error)
                 return render_template('auth/register.html')
@@ -88,7 +88,7 @@ def register():
                 flash(error)
                 return render_template('auth/register.html')
             
-            if (not utils.isPasswordValid(password)):
+            if(not utils.isPasswordValid(password)):
                 error = 'Password should contain at least a lowercase letter, an uppercase letter and a number with 8 characters long'
                 flash(error)
                 return render_template('auth/register.html')
@@ -119,7 +119,7 @@ def register():
         return render_template('auth/register.html')
 
     
-@bp.route('/confirm', methods='POST')
+@bp.route('/confirm', methods=('GET', 'POST'))
 def confirm():
     try:
         if g.user:
@@ -140,11 +140,11 @@ def confirm():
 
             if not password1:
                 flash('Password confirmation required')
-                return render_template('auth/forgot.html', number=authid)
+                return render_template('auth/change.html', number=authid)
 
             if password1 != password:
                 flash('Both values should be the same')
-                return render_template('auth/forgot.html', number=authid)
+                return render_template('auth/change.html', number=authid)
 
             if not utils.isPasswordValid(password):
                 error = 'Password should contain at least a lowercase letter, an uppercase letter and a number with 8 characters long.'
@@ -182,7 +182,7 @@ def change():
         if g.user:
             return redirect(url_for('inbox.show'))
         
-        if request.method == ('GET', 'POST'): 
+        if request.method == 'GET': 
             number = request.args['auth'] 
             
             db = get_db()
@@ -205,7 +205,7 @@ def forgot():
             return redirect(url_for('inbox.show'))
         
         if request.method == 'POST':
-            email = request.form('email')
+            email = request.form['email']
             
             if ((not email) or (not utils.isEmailValid(email))):
                 error = 'Email Address Invalid'
@@ -221,8 +221,8 @@ def forgot():
                 number = hex(random.getrandbits(512))[2:]
                 
                 db.execute(
-                     'UPDATE forgotlink SET state = ? WHERE userid = ?',
-                    (utils.F_INACTIVE, user['id'])
+                    'UPDATE forgotlink SET state = ? WHERE userid = ?',
+                    (utils.F_INACTIVE,user['id'])
                 )
                 db.execute(
                     'INSERT INTO forgotlink (userid, challenge,state ) VALUES (?,?,?)',
@@ -248,7 +248,7 @@ def forgot():
         return render_template('auth/forgot.html')
 
 
-@bp.route('/login', methods='POST')
+@bp.route('/login', methods=('GET', 'POST'))
 def login():
     try:
         if g.user:
